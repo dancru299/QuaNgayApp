@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QuàNgay — Gợi ý quà tặng bằng AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --rose: #e8455a;
+    --rose-light: #fde8eb;
+    --gold: #c9952a;
+    --cream: #fdf6ee;
+    --dark: #1a1016;
+    --muted: #8a7580;
+    --card-bg: #ffffff;
+    --border: #f0e4e8;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--dark);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    text-align: center;
+    padding: 3rem 1rem 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, #fde8eb 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.2rem, 5vw, 3.5rem);
+    font-weight: 700;
+    color: var(--dark);
+    letter-spacing: -1px;
+  }
+  .logo span { color: var(--rose); }
+  .tagline {
+    font-size: 1rem;
+    color: var(--muted);
+    margin-top: .4rem;
+    font-weight: 300;
+  }
+  .occasion-chips {
+    display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem;
+    margin-top: 1.5rem;
+  }
+  .chip {
+    background: white; border: 1.5px solid var(--border);
+    border-radius: 999px; padding: .35rem 1rem;
+    font-size: .82rem; cursor: pointer;
+    transition: all .2s; color: var(--muted); font-weight: 500;
+  }
+  .chip:hover, .chip.active {
+    background: var(--rose); color: white; border-color: var(--rose);
+    transform: translateY(-2px); box-shadow: 0 4px 12px rgba(232,69,90,.25);
+  }
+
+  /* ── FORM ── */
+  .form-wrapper {
+    max-width: 640px; margin: 0 auto; padding: 0 1rem 2rem;
+  }
+  .card {
+    background: white; border-radius: 20px;
+    padding: 1.8rem; box-shadow: 0 2px 24px rgba(26,16,22,.06);
+    border: 1px solid var(--border);
+  }
+  .card + .card { margin-top: 1rem; }
+
+  .section-label {
+    font-size: .75rem; text-transform: uppercase; letter-spacing: 1.5px;
+    color: var(--gold); font-weight: 500; margin-bottom: .8rem;
+  }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
+  
+  select, input[type=range] {
+    width: 100%;
+    appearance: none;
+  }
+  select {
+    background: var(--cream); border: 1.5px solid var(--border);
+    border-radius: 12px; padding: .7rem 1rem;
+    font-family: inherit; font-size: .9rem; cursor: pointer;
+    color: var(--dark);
+  }
+  select:focus { outline: none; border-color: var(--rose); }
+
+  .budget-wrap { margin-top: .5rem; }
+  .budget-labels { display: flex; justify-content: space-between; font-size: .78rem; color: var(--muted); margin-bottom: .4rem; }
+  .budget-value { color: var(--rose); font-weight: 500; }
+  input[type=range] {
+    -webkit-appearance: none; height: 4px;
+    background: linear-gradient(to right, var(--rose) 0%, var(--rose) var(--pct,25%), var(--border) var(--pct,25%));
+    border-radius: 4px;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 18px; height: 18px;
+    background: var(--rose); border-radius: 50%; cursor: pointer;
+    box-shadow: 0 2px 8px rgba(232,69,90,.35);
+  }
+
+  .interests-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: .5rem;
+    margin-top: .5rem;
+  }
+  .interest-btn {
+    background: var(--cream); border: 1.5px solid var(--border);
+    border-radius: 12px; padding: .55rem .4rem; text-align: center;
+    cursor: pointer; font-size: .82rem; transition: all .2s; color: var(--dark);
+    user-select: none;
+  }
+  .interest-btn:hover { border-color: var(--rose-light); background: var(--rose-light); }
+  .interest-btn.active { background: var(--rose-light); border-color: var(--rose); color: var(--rose); font-weight: 500; }
+  .interest-btn .emoji { display: block; font-size: 1.3rem; margin-bottom: .15rem; }
+
+  textarea {
+    width: 100%; background: var(--cream); border: 1.5px solid var(--border);
+    border-radius: 12px; padding: .8rem 1rem; font-family: inherit;
+    font-size: .9rem; resize: vertical; min-height: 80px; color: var(--dark);
+  }
+  textarea:focus { outline: none; border-color: var(--rose); }
+
+  .submit-btn {
+    width: 100%; margin-top: 1rem; padding: 1rem;
+    background: var(--rose); color: white; border: none;
+    border-radius: 14px; font-family: inherit; font-size: 1rem; font-weight: 500;
+    cursor: pointer; transition: all .2s; letter-spacing: .3px;
+    box-shadow: 0 4px 20px rgba(232,69,90,.3);
+  }
+  .submit-btn:hover { background: #d63550; transform: translateY(-2px); box-shadow: 0 8px 28px rgba(232,69,90,.35); }
+  .submit-btn:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+
+  /* ── LOADING ── */
+  .loading {
+    display: none; text-align: center; padding: 3rem 1rem;
+  }
+  .loading.show { display: block; }
+  .dots { display: flex; justify-content: center; gap: .5rem; margin-top: 1rem; }
+  .dot {
+    width: 10px; height: 10px; background: var(--rose); border-radius: 50%;
+    animation: bounce 1.2s infinite;
+  }
+  .dot:nth-child(2) { animation-delay: .2s; }
+  .dot:nth-child(3) { animation-delay: .4s; }
+  @keyframes bounce { 0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-10px)} }
+
+  /* ── RESULTS ── */
+  #results { max-width: 720px; margin: 0 auto; padding: 0 1rem 4rem; display: none; }
+  #results.show { display: block; }
+  .results-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem; font-weight: 700; text-align: center;
+    margin-bottom: 1.5rem; color: var(--dark);
+  }
+  .results-title em { color: var(--rose); font-style: italic; }
+
+  .gift-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.2rem; }
+
+  .gift-card {
+    background: white; border-radius: 18px; overflow: hidden;
+    border: 1px solid var(--border); transition: all .25s;
+    box-shadow: 0 2px 12px rgba(26,16,22,.05);
+  }
+  .gift-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(26,16,22,.1); }
+
+  .gift-image {
+    width: 100%; aspect-ratio: 4/3; object-fit: cover;
+    background: linear-gradient(135deg, var(--rose-light), #fef3e2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 3.5rem;
+  }
+  .gift-body { padding: 1.1rem; }
+  .gift-reason {
+    font-size: .78rem; color: var(--gold); font-weight: 500;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: .4rem;
+  }
+  .gift-name { font-family: 'Playfair Display', serif; font-size: 1.05rem; font-weight: 700; margin-bottom: .4rem; }
+  .gift-desc { font-size: .84rem; color: var(--muted); line-height: 1.5; margin-bottom: .9rem; }
+  .gift-footer { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+  .gift-price { font-size: .95rem; font-weight: 500; color: var(--rose); }
+  .gift-links { display: flex; gap: .4rem; }
+  .shop-btn {
+    padding: .4rem .8rem; border-radius: 8px; font-size: .78rem;
+    text-decoration: none; font-weight: 500; transition: all .15s;
+  }
+  .btn-shopee { background: #ee4d2d; color: white; }
+  .btn-shopee:hover { background: #d43f22; }
+  .btn-tiki { background: #1a94ff; color: white; }
+  .btn-tiki:hover { background: #0a7fe8; }
+
+  .reset-btn {
+    display: block; margin: 2rem auto 0; padding: .7rem 2rem;
+    background: transparent; border: 1.5px solid var(--border);
+    border-radius: 12px; font-family: inherit; font-size: .9rem;
+    cursor: pointer; color: var(--muted); transition: all .2s;
+  }
+  .reset-btn:hover { border-color: var(--rose); color: var(--rose); }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center; padding: 1.5rem; font-size: .78rem; color: var(--muted);
+    border-top: 1px solid var(--border); margin-top: 2rem;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Quà<span>Ngay</span> 🎁</div>
+  <div class="tagline">AI gợi ý quà tặng hoàn hảo — mua ngay trên Shopee & Tiki</div>
+  <div class="occasion-chips">
+    <span class="chip active" data-val="sinh nhật">🎂 Sinh nhật</span>
+    <span class="chip" data-val="Valentine">💝 Valentine</span>
+    <span class="chip" data-val="8/3">🌸 8/3</span>
+    <span class="chip" data-val="Tết">🧧 Tết</span>
+    <span class="chip" data-val="kỷ niệm">💍 Kỷ niệm</span>
+    <span class="chip" data-val="tốt nghiệp">🎓 Tốt nghiệp</span>
+    <span class="chip" data-val="tân gia">🏠 Tân gia</span>
+    <span class="chip" data-val="Noel">🎄 Noel</span>
+  </div>
+</header>
+
+<div class="form-wrapper" id="formSection">
+  <!-- WHO -->
+  <div class="card">
+    <div class="section-label">👤 Người nhận quà</div>
+    <div class="row">
+      <select id="relation">
+        <option value="">Quan hệ...</option>
+        <option>Bạn gái / Vợ</option>
+        <option>Bạn trai / Chồng</option>
+        <option>Bố / Ông</option>
+        <option>Mẹ / Bà</option>
+        <option>Anh / Em trai</option>
+        <option>Chị / Em gái</option>
+        <option>Bạn thân</option>
+        <option>Đồng nghiệp</option>
+        <option>Sếp</option>
+        <option>Con</option>
+      </select>
+      <select id="age">
+        <option value="">Tuổi...</option>
+        <option>Dưới 10 tuổi</option>
+        <option>10–18 tuổi</option>
+        <option>18–25 tuổi</option>
+        <option>25–35 tuổi</option>
+        <option>35–50 tuổi</option>
+        <option>Trên 50 tuổi</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- BUDGET -->
+  <div class="card">
+    <div class="section-label">💰 Ngân sách</div>
+    <div class="budget-labels">
+      <span>100k</span>
+      <span class="budget-value" id="budgetDisplay">500,000 đ</span>
+      <span>5tr+</span>
+    </div>
+    <div class="budget-wrap">
+      <input type="range" id="budget" min="1" max="10" value="3" oninput="updateBudget(this)">
+    </div>
+  </div>
+
+  <!-- INTERESTS -->
+  <div class="card">
+    <div class="section-label">✨ Sở thích (chọn nhiều)</div>
+    <div class="interests-grid" id="interestsGrid">
+      <div class="interest-btn" data-val="thể thao"><span class="emoji">⚽</span>Thể thao</div>
+      <div class="interest-btn" data-val="đọc sách"><span class="emoji">📚</span>Đọc sách</div>
+      <div class="interest-btn" data-val="du lịch"><span class="emoji">✈️</span>Du lịch</div>
+      <div class="interest-btn" data-val="nấu ăn"><span class="emoji">👨‍🍳</span>Nấu ăn</div>
+      <div class="interest-btn" data-val="gaming"><span class="emoji">🎮</span>Gaming</div>
+      <div class="interest-btn" data-val="âm nhạc"><span class="emoji">🎵</span>Âm nhạc</div>
+      <div class="interest-btn" data-val="thời trang"><span class="emoji">👗</span>Thời trang</div>
+      <div class="interest-btn" data-val="làm đẹp"><span class="emoji">💄</span>Làm đẹp</div>
+      <div class="interest-btn" data-val="công nghệ"><span class="emoji">💻</span>Công nghệ</div>
+      <div class="interest-btn" data-val="nghệ thuật"><span class="emoji">🎨</span>Nghệ thuật</div>
+      <div class="interest-btn" data-val="yoga/thiền"><span class="emoji">🧘</span>Yoga</div>
+      <div class="interest-btn" data-val="cà phê"><span class="emoji">☕</span>Cà phê</div>
+    </div>
+  </div>
+
+  <!-- NOTE -->
+  <div class="card">
+    <div class="section-label">💬 Thêm gì đó (tuỳ chọn)</div>
+    <textarea id="note" placeholder='VD: "Bạn ấy thích màu hồng, hay đi gym buổi sáng, tính cách hướng nội..."'></textarea>
+  </div>
+
+  <button class="submit-btn" id="submitBtn" onclick="submitForm()">
+    ✨ Gợi ý quà cho tôi ngay
+  </button>
+</div>
+
+<!-- LOADING -->
+<div class="loading" id="loading">
+  <p style="color:var(--muted); font-size:.95rem;">AI đang tìm quà tặng phù hợp nhất...</p>
+  <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+</div>
+
+<!-- RESULTS -->
+<div id="results">
+  <div class="results-title" id="resultsTitle">Quà tặng <em>hoàn hảo</em> cho bạn</div>
+  <div class="gift-grid" id="giftGrid"></div>
+  <button class="reset-btn" onclick="resetForm()">↩ Tìm lại</button>
+</div>
+
+<footer>
+  Gợi ý bởi AI · Mua qua Shopee & Tiki để ủng hộ QuàNgay 💛<br>
+  Các link mua hàng có thể chứa mã affiliate
+</footer>
+
+<script>
+const BUDGETS = [
+  {label:'100,000 đ', val:'100000', range:'50k–150k'},
+  {label:'200,000 đ', val:'200000', range:'150k–300k'},
+  {label:'500,000 đ', val:'500000', range:'300k–700k'},
+  {label:'1,000,000 đ', val:'1000000', range:'700k–1.5tr'},
+  {label:'2,000,000 đ', val:'2000000', range:'1.5tr–3tr'},
+  {label:'3,000,000 đ', val:'3000000', range:'2.5tr–4tr'},
+  {label:'5,000,000 đ', val:'5000000', range:'4tr–7tr'},
+  {label:'10,000,000 đ', val:'10000000', range:'7tr–15tr'},
+  {label:'20,000,000 đ', val:'20000000', range:'15tr–30tr'},
+  {label:'Không giới hạn', val:'unlimited', range:'cao cấp'},
+];
+
+let selectedOccasion = 'sinh nhật';
+
+function updateBudget(el) {
+  const idx = parseInt(el.value) - 1;
+  document.getElementById('budgetDisplay').textContent = BUDGETS[idx].label;
+  const pct = ((el.value - 1) / 9 * 100).toFixed(0) + '%';
+  el.style.setProperty('--pct', pct);
+}
+
+document.querySelectorAll('.chip').forEach(c => {
+  c.addEventListener('click', () => {
+    document.querySelectorAll('.chip').forEach(x => x.classList.remove('active'));
+    c.classList.add('active');
+    selectedOccasion = c.dataset.val;
+  });
+});
+
+document.querySelectorAll('.interest-btn').forEach(b => {
+  b.addEventListener('click', () => b.classList.toggle('active'));
+});
+
+function getInterests() {
+  return [...document.querySelectorAll('.interest-btn.active')].map(b => b.dataset.val);
+}
+
+function getBudgetInfo() {
+  const idx = parseInt(document.getElementById('budget').value) - 1;
+  return BUDGETS[idx];
+}
+
+async function submitForm() {
+  const relation = document.getElementById('relation').value;
+  const age = document.getElementById('age').value;
+  const note = document.getElementById('note').value;
+  const interests = getInterests();
+  const budget = getBudgetInfo();
+
+  if (!relation || !age) {
+    alert('Vui lòng chọn quan hệ và tuổi của người nhận nhé!');
+    return;
+  }
+
+  document.getElementById('submitBtn').disabled = true;
+  document.getElementById('formSection').style.display = 'none';
+  document.getElementById('loading').classList.add('show');
+  document.getElementById('results').classList.remove('show');
+
+  const prompt = `Bạn là chuyên gia tư vấn quà tặng tại Việt Nam. Hãy gợi ý 6 món quà tặng CỤ THỂ, có thể mua được trên Shopee/Tiki.
+
+Thông tin:
+- Dịp: ${selectedOccasion}
+- Người nhận: ${relation}, ${age}
+- Ngân sách: khoảng ${budget.range}
+- Sở thích: ${interests.length ? interests.join(', ') : 'không rõ'}
+- Ghi chú thêm: ${note || 'không có'}
+
+Trả lời ĐÚNG JSON, không có markdown, không giải thích thêm:
+[
+  {
+    "emoji": "emoji đại diện 1 ký tự",
+    "name": "tên sản phẩm cụ thể (có thương hiệu nếu có)",
+    "reason": "lý do phù hợp (5–8 từ)",
+    "desc": "mô tả 1–2 câu tại sao đây là lựa chọn tốt",
+    "priceDisplay": "giá hiển thị VD: 350,000–500,000 đ",
+    "shopeeKeyword": "từ khoá tìm trên Shopee",
+    "tikiKeyword": "từ khoá tìm trên Tiki"
+  }
+]`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await res.json();
+    const text = data.content[0].text.replace(/```json|```/g, '').trim();
+    const gifts = JSON.parse(text);
+    renderResults(gifts, relation, selectedOccasion);
+
+  } catch(e) {
+    console.error(e);
+    alert('Có lỗi xảy ra. Vui lòng thử lại!');
+    resetForm();
+  }
+}
+
+function shopeeLink(kw) {
+  return `https://shopee.vn/search?keyword=${encodeURIComponent(kw)}`;
+}
+function tikiLink(kw) {
+  return `https://tiki.vn/search?q=${encodeURIComponent(kw)}`;
+}
+
+function renderResults(gifts, relation, occasion) {
+  document.getElementById('loading').classList.remove('show');
+
+  document.getElementById('resultsTitle').innerHTML =
+    `Quà <em>${occasion}</em> dành cho ${relation}`;
+
+  const grid = document.getElementById('giftGrid');
+  grid.innerHTML = gifts.map(g => `
+    <div class="gift-card">
+      <div class="gift-image">${g.emoji}</div>
+      <div class="gift-body">
+        <div class="gift-reason">${g.reason}</div>
+        <div class="gift-name">${g.name}</div>
+        <div class="gift-desc">${g.desc}</div>
+        <div class="gift-footer">
+          <div class="gift-price">${g.priceDisplay}</div>
+          <div class="gift-links">
+            <a class="shop-btn btn-shopee" href="${shopeeLink(g.shopeeKeyword)}" target="_blank">🛒 Shopee</a>
+            <a class="shop-btn btn-tiki" href="${tikiLink(g.tikiKeyword)}" target="_blank">Tiki</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('results').classList.add('show');
+  document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+}
+
+function resetForm() {
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('formSection').style.display = '';
+  document.getElementById('submitBtn').disabled = false;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// init budget display
+updateBudget(document.getElementById('budget'));
+</script>
+</body>
+</html>
